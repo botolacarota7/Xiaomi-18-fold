@@ -22,6 +22,7 @@ python3 -m http.server 8000
 
 - `index.html` — struttura della pagina, sezioni e import map di Three.js
 - `style.css` — tema scuro, tipografia, layout e animazioni di reveal
+- `vendor/three.module.js` — Three.js incluso localmente (nessun CDN esterno)
 - `main.js` — scena Three.js: telefono pieghevole modellato proceduralmente, cerniera animata, coreografia legata allo scroll, cambio colore
 
 ## Tecnologie
