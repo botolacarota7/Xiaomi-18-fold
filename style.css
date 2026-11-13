@@ -41,6 +41,8 @@ h1, h2, .brand { font-family: "Space Grotesk", "Inter", sans-serif; }
   color: var(--muted);
 }
 
+#webgl-fallback[hidden] { display: none; }
+
 /* Loader */
 #loader {
   position: fixed;

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Xiaomi 18 Fold — Il futuro si piega a te</title>
-  <meta name="description" content="Xiaomi 18 Fold: il pieghevole definitivo. Display AMOLED 8.03", cerniera WaterDrop, ottiche Leica." />
+  <meta name="description" content="Xiaomi 18 Fold: il pieghevole definitivo. Display AMOLED da 8.03 pollici, cerniera WaterDrop, ottiche Leica." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -12,6 +12,35 @@
 </head>
 <body>
   <div id="loader"><div class="loader-ring"></div><p>Xiaomi 18 Fold</p></div>
+
+  <script>
+    (function () {
+      var loaderEl = document.getElementById('loader');
+      var fallbackEl = document.getElementById('webgl-fallback');
+      var fallbackText = fallbackEl ? fallbackEl.querySelector('p') : null;
+
+      function showError(msg) {
+        if (loaderEl) loaderEl.classList.add('done');
+        if (!fallbackEl) return;
+        fallbackEl.hidden = false;
+        if (fallbackText) fallbackText.textContent = msg;
+      }
+
+      window.addEventListener('error', function (e) {
+        if (location.protocol === 'file:') {
+          showError('Moduli JavaScript bloccati: aperto da disco il browser impedisce il caricamento. Usa un server locale (python3 -m http.server) o GitHub Pages.');
+        } else {
+          showError('Errore durante il caricamento della scena 3D: ' + (e.message || 'risorsa non disponibile') + '. Ricarica la pagina o controlla la connessione.');
+        }
+      });
+
+      setTimeout(function () {
+        if (loaderEl && !loaderEl.classList.contains('done')) {
+          loaderEl.classList.add('done');
+        }
+      }, 6000);
+    })();
+  </script>
 
   <canvas id="scene"></canvas>
   <div id="webgl-fallback" hidden>

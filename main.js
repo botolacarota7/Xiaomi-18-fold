@@ -349,37 +349,50 @@ window.addEventListener('resize', onResize);
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clock = new THREE.Clock();
 let firstFrame = true;
+let renderFailed = false;
 
 function animate() {
+  if (renderFailed) return;
   requestAnimationFrame(animate);
-  const t = clock.getElapsedTime();
 
-  const doc = document.documentElement;
-  const maxScroll = Math.max(doc.scrollHeight - window.innerHeight, 1);
-  const p = THREE.MathUtils.clamp(window.scrollY / maxScroll, 0, 1);
-  const k = sampleKeys(p);
+  try {
+    const t = clock.getElapsedTime();
 
-  const sway = reducedMotion ? 0 : Math.sin(t * 0.6) * 0.05;
-  const breathe = reducedMotion ? 0 : Math.sin(t * 0.9) * 0.03 * (1 - Math.min(k.fold, 1) * 0.5);
+    const doc = document.documentElement;
+    const maxScroll = Math.max(doc.scrollHeight - window.innerHeight, 1);
+    const p = THREE.MathUtils.clamp(window.scrollY / maxScroll, 0, 1);
+    const k = sampleKeys(p);
 
-  phone.rotation.y = k.rotY + mouse.x * 0.12 + sway * 0.4;
-  phone.rotation.x = mouse.y * 0.05;
-  phone.position.y = Math.sin(t * 0.7) * 0.08;
+    const sway = reducedMotion ? 0 : Math.sin(t * 0.6) * 0.05;
+    const breathe = reducedMotion ? 0 : Math.sin(t * 0.9) * 0.03 * (1 - Math.min(k.fold, 1) * 0.5);
 
-  hingeGroup.rotation.y = -k.fold - breathe;
-  hingeGroup.position.z = Math.sin(k.fold) * 0.02;
+    phone.rotation.y = k.rotY + mouse.x * 0.12 + sway * 0.4;
+    phone.rotation.x = mouse.y * 0.05;
+    phone.position.y = Math.sin(t * 0.7) * 0.08;
 
-  camera.position.set(
-    k.cam[0] + mouse.x * 0.4,
-    k.cam[1] - mouse.y * 0.3,
-    k.cam[2] * (camera.aspect < 1 ? 1.35 : 1)
-  );
-  camera.lookAt(k.look[0], k.look[1], k.look[2]);
+    hingeGroup.rotation.y = -k.fold - breathe;
+    hingeGroup.position.z = Math.sin(k.fold) * 0.02;
 
-  particles.rotation.y = t * 0.02;
-  particles.rotation.x = Math.sin(t * 0.1) * 0.05;
+    camera.position.set(
+      k.cam[0] + mouse.x * 0.4,
+      k.cam[1] - mouse.y * 0.3,
+      k.cam[2] * (camera.aspect < 1 ? 1.35 : 1)
+    );
+    camera.lookAt(k.look[0], k.look[1], k.look[2]);
 
-  renderer.render(scene, camera);
+    particles.rotation.y = t * 0.02;
+    particles.rotation.x = Math.sin(t * 0.1) * 0.05;
+
+    renderer.render(scene, camera);
+  } catch (err) {
+    renderFailed = true;
+    loader.classList.add('done');
+    fallback.hidden = false;
+    fallback.querySelector('p').textContent =
+      'Errore nella scena 3D: ' + (err && err.message ? err.message : err);
+    console.error(err);
+    return;
+  }
 
   if (firstFrame) {
     firstFrame = false;
