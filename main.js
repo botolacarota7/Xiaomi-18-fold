@@ -303,6 +303,7 @@ function sampleKeys(p) {
     fold: THREE.MathUtils.lerp(a.fold, b.fold, e),
     cam: a.cam.map((v, j) => THREE.MathUtils.lerp(v, b.cam[j], e)),
     rotY: THREE.MathUtils.lerp(a.rotY, b.rotY, e),
+    look: a.look.map((v, j) => THREE.MathUtils.lerp(v, b.look[j], e)),
   };
 }
 
