@@ -25,6 +25,24 @@ scene.fog = new THREE.FogExp2(0x05060b, 0.02);
 const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 0.6, 11.5);
 
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envScene = new THREE.Scene();
+envScene.background = new THREE.Color(0x07080f);
+function addPanel(color, intensity, w, h, x, y, z, ry = 0, rx = 0) {
+  const panel = new THREE.Mesh(
+    new THREE.PlaneGeometry(w, h),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(intensity), side: THREE.DoubleSide })
+  );
+  panel.position.set(x, y, z);
+  panel.rotation.set(rx, ry, 0);
+  envScene.add(panel);
+}
+addPanel(0xffffff, 5, 10, 5, 0, 7, 0, 0, Math.PI / 2);
+addPanel(0xff6a00, 3, 7, 6, -9, 0, 4, Math.PI / 2);
+addPanel(0x7c5cff, 3, 7, 6, 9, 0, 4, -Math.PI / 2);
+addPanel(0xffffff, 1.5, 12, 7, 0, 0, -10);
+scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+
 const hemi = new THREE.HemisphereLight(0x8fa3ff, 0x0a0a12, 0.5);
 scene.add(hemi);
 
@@ -158,8 +176,8 @@ const bodyGeo = new THREE.ExtrudeGeometry(roundedRectShape(HALF_W, HALF_H, 0.42)
 
 const bodyMat = new THREE.MeshPhysicalMaterial({
   color: 0x8b939e,
-  metalness: 0.85,
-  roughness: 0.32,
+  metalness: 0.75,
+  roughness: 0.35,
   clearcoat: 0.6,
   clearcoatRoughness: 0.25,
 });
@@ -196,7 +214,7 @@ function buildHalf() {
   half.add(body);
 
   const screen = new THREE.Mesh(new THREE.PlaneGeometry(HALF_W - 0.42, HALF_H - 0.42), screenMat);
-  screen.position.z = T + BEVEL + 0.004;
+  screen.position.z = T + BEVEL * 2 + 0.004;
   half.add(screen);
 
   return half;
