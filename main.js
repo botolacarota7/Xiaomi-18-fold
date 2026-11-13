@@ -6,14 +6,14 @@ const loader = document.getElementById('loader');
 
 let renderer;
 try {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
 } catch (e) {
   fallback.hidden = false;
   loader.classList.add('done');
   throw e;
 }
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, window.innerWidth < 720 ? 1.5 : 1.75));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.15;
@@ -170,8 +170,8 @@ const bodyGeo = new THREE.ExtrudeGeometry(roundedRectShape(HALF_W, HALF_H, 0.42)
   bevelEnabled: true,
   bevelThickness: BEVEL,
   bevelSize: 0.02,
-  bevelSegments: 3,
-  curveSegments: 16,
+  bevelSegments: 2,
+  curveSegments: 8,
 });
 
 const bodyMat = new THREE.MeshPhysicalMaterial({
@@ -243,7 +243,7 @@ const cameraBump = new THREE.Mesh(
     bevelThickness: 0.015,
     bevelSize: 0.015,
     bevelSegments: 2,
-    curveSegments: 12,
+    curveSegments: 8,
   }),
   bodyMat
 );
@@ -272,13 +272,13 @@ flash.rotation.x = Math.PI / 2;
 flash.position.set(HALF_W / 2 - 1.05 - 0.55, HALF_H / 2 - 1.05 - 0.55, -BEVEL - 0.1);
 hingeGroup.add(flash);
 
-const hinge = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, HALF_H * 0.92, 32), frameMat);
+const hinge = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, HALF_H * 0.92, 20), frameMat);
 hinge.position.set(0, 0, 0);
 phone.add(hinge);
 
 /* ---------- Particles ---------- */
 
-const pCount = 450;
+const pCount = 220;
 const pGeo = new THREE.BufferGeometry();
 const pPos = new Float32Array(pCount * 3);
 for (let i = 0; i < pCount; i++) {

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prova lo Xiaomi 18 Fold — HyperOS 4</title>
+  <meta name="description" content="Prova interattiva dello Xiaomi 18 Fold: accendilo, sbloccalo e usa HyperOS 4 con app e giochi." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="prova.css?v=1" />
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="index.html">← XIAOMI <span>18 FOLD</span></a>
+    <span class="nav-tag">Demo interattiva HyperOS 4</span>
+  </header>
+
+  <main class="layout">
+    <aside class="guide">
+      <p class="eyebrow">Prova dal vivo</p>
+      <h1>Accendilo.<br/><span class="grad">Usalo davvero.</span></h1>
+      <ol class="steps">
+        <li><strong>Accendi</strong> — premi il pulsante laterale sul bordo del telefono</li>
+        <li><strong>Sblocca</strong> — trascina la schermata di blocco verso l'alto (o cliccala)</li>
+        <li><strong>Usa le app</strong> — Calcolatrice, Meteo, Galleria, Musica, Impostazioni</li>
+        <li><strong>Gioca</strong> — Snake e 2048 sono giocabili: frecce, WASD o swipe</li>
+        <li><strong>Piega</strong> — premi <kbd>F</kbd> o il pulsante «Piega» per chiudere il telefono</li>
+      </ol>
+      <button class="fold-toggle" id="foldToggle">Piega il telefono</button>
+      <p class="hint">La barra sottile in basso nello schermo riporta sempre alla home.</p>
+    </aside>
+
+    <div class="stage-wrap">
+      <div class="stage">
+        <div class="device" id="device">
+          <div class="half left">
+            <div class="side-btn vol-up"></div>
+            <div class="side-btn vol-down"></div>
+            <div class="inner-screen" id="screen">
+              <div class="statusbar">
+                <span id="sbTime">09:41</span>
+                <span class="sb-icons">5G&nbsp;&nbsp;<span class="batt"><span class="batt-level"></span></span>&nbsp;87%</span>
+              </div>
+
+              <div class="screen-body" id="screenBody">
+                <div class="view boot active" id="viewOff">
+                  <p class="off-text">Schermo spento</p>
+                  <p class="off-sub">Premi il pulsante laterale</p>
+                </div>
+
+                <div class="view boot" id="viewBoot">
+                  <div class="boot-logo">
+                    <div class="boot-ring"></div>
+                    <p class="boot-name">HyperOS <span>4</span></p>
+                  </div>
+                  <div class="boot-bar"><span></span></div>
+                </div>
+
+                <div class="view lock" id="viewLock">
+                  <p class="lock-time" id="lockTime">09:41</p>
+                  <p class="lock-date" id="lockDate">Martedì 17 marzo</p>
+                  <div class="lock-notif">
+                    <span class="notif-ico">✉️</span>
+                    <span>Leica — Il tuo scatto è pronto</span>
+                  </div>
+                  <p class="lock-hint">Scorri verso l'alto per sbloccare</p>
+                </div>
+
+                <div class="view home" id="viewHome">
+                  <div class="clock-widget">
+                    <p class="cw-time" id="cwTime">09:41</p>
+                    <p class="cw-date" id="cwDate">Mar 17 mar · Milano 18°</p>
+                  </div>
+                  <div class="app-grid" id="appGrid"></div>
+                  <div class="dock" id="dock"></div>
+                </div>
+
+                <div class="view app" id="viewApp">
+                  <div class="app-frame" id="appFrame"></div>
+                </div>
+              </div>
+
+              <div class="homebar" id="homebar" title="Home"></div>
+            </div>
+          </div>
+
+          <div class="half right">
+            <div class="cover-screen" id="coverScreen">
+              <p class="cover-time" id="coverTime">09:41</p>
+              <p class="cover-date" id="coverDate">mar 17 mar</p>
+              <div class="cover-pill">🔋 87% · HyperOS 4</div>
+            </div>
+            <button class="power-btn" id="powerBtn" aria-label="Pulsante accensione"></button>
+          </div>
+
+          <div class="hinge-shadow"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="prova.js?v=1"></script>
+</body>
+</html>
