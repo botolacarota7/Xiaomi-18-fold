@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Xiaomi 18 Fold — Il futuro si piega a te</title>
+  <meta name="description" content="Xiaomi 18 Fold: il pieghevole definitivo. Display AMOLED 8.03", cerniera WaterDrop, ottiche Leica." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="loader"><div class="loader-ring"></div><p>Xiaomi 18 Fold</p></div>
+
+  <canvas id="scene"></canvas>
+  <div id="webgl-fallback" hidden>
+    <p>Il tuo browser non supporta WebGL: la esperienza 3D non è disponibile.</p>
+  </div>
+
+  <header class="nav">
+    <a class="brand" href="#top">XIAOMI <span>18 FOLD</span></a>
+    <nav class="nav-links">
+      <a href="#design">Design</a>
+      <a href="#display">Display</a>
+      <a href="#fotocamera">Fotocamera</a>
+      <a href="#colori">Colori</a>
+    </nav>
+    <a class="nav-cta" href="#preordina">Preordina</a>
+  </header>
+
+  <main class="content">
+    <section class="hero" id="top">
+      <p class="eyebrow">Nuova generazione pieghevole</p>
+      <h1>Xiaomi <span class="grad">18 Fold</span></h1>
+      <p class="sub">Il futuro si piega a te.<br/>Scorri per scoprirlo.</p>
+      <div class="scroll-hint"><span></span></div>
+    </section>
+
+    <section class="panel right" id="design">
+      <p class="eyebrow">Design</p>
+      <h2>Si piega.<br/><span class="grad">Non si spezza.</span></h2>
+      <p>Una scocca in alluminio aerospaziale da 9,4 mm di spessore una volta chiuso. Ogni piegatura è un gesto fluido, silenzioso, preciso.</p>
+      <ul class="mini-specs">
+        <li><strong>9,4 mm</strong><span>chiuso</span></li>
+        <li><strong>4,8 mm</strong><span>aperto</span></li>
+        <li><strong>226 g</strong><span>peso</span></li>
+      </ul>
+    </section>
+
+    <section class="panel left" id="cerniera">
+      <p class="eyebrow">Cerniera</p>
+      <h2>Cerniera <span class="grad">WaterDrop</span></h2>
+      <p>La cerniera di quarta generazione accoglie il display in una goccia d'acqua: piega quasi invisibile, resistenza certificata a 500.000 piegature.</p>
+      <ul class="mini-specs">
+        <li><strong>500.000</strong><span>piegature</span></li>
+        <li><strong>2,3 mm</strong><span>raggio curva</span></li>
+        <li><strong>IPX8</strong><span>resistenza acqua</span></li>
+      </ul>
+    </section>
+
+    <section class="panel right" id="display">
+      <p class="eyebrow">Display</p>
+      <h2>Due schermi.<br/><span class="grad">Un'esperienza.</span></h2>
+      <p>Aperto diventa un tablet, chiuso uno smartphone compatto. LTPO adattivo dal 1 al 120 Hz, luminosità di picco record.</p>
+      <ul class="mini-specs">
+        <li><strong>8,03"</strong><span>AMOLED 2K interno</span></li>
+        <li><strong>6,53"</strong><span>esterno</span></li>
+        <li><strong>3200 nit</strong><span>picco</span></li>
+      </ul>
+    </section>
+
+    <section class="panel left" id="fotocamera">
+      <p class="eyebrow">Fotocamera</p>
+      <h2>Ottiche <span class="grad">Leica</span></h2>
+      <p>Un sistema triple 50 MP co-sviluppato con Leica. Principal, tele e ultra-grandangolare: ritratti con autentico carattere ottico.</p>
+      <ul class="mini-specs">
+        <li><strong>50 MP</strong><span>principal ƒ/1.6</span></li>
+        <li><strong>50 MP</strong><span>tele 3,2×</span></li>
+        <li><strong>50 MP</strong><span>ultra-wide 122°</span></li>
+      </ul>
+    </section>
+
+    <section class="panel right" id="prestazioni">
+      <p class="eyebrow">Prestazioni</p>
+      <h2>Potenza <span class="grad">senza compromise</span></h2>
+      <p>Snapdragon 8 Elite Gen 5, raffreddamento a vapor chamber e batteria che dura dal mattino alla notte. E oltre.</p>
+      <ul class="mini-specs">
+        <li><strong>3 nm</strong><span>Snapdragon 8 Elite Gen 5</span></li>
+        <li><strong>5400 mAh</strong><span>batteria</span></li>
+        <li><strong>90 W</strong><span>ricarica rapida</span></li>
+      </ul>
+    </section>
+
+    <section class="panel left" id="colori">
+      <p class="eyebrow">Colori</p>
+      <h2>Scegli il tuo <span class="grad">18 Fold</span></h2>
+      <p>Quattro finiture opache al tatto, realizzate con vetro micro-inciso ant impronta.</p>
+      <div class="swatches" id="swatches">
+        <button class="swatch active" data-color="#8b939e" style="--c:#8b939e" aria-label="Titanio Lunare"><span>Titanio Lunare</span></button>
+        <button class="swatch" data-color="#1f3a68" style="--c:#1f3a68" aria-label="Blu Orbitale"><span>Blu Orbitale</span></button>
+        <button class="swatch" data-color="#2e5e4e" style="--c:#2e5e4e" aria-label="Verde Manto"><span>Verde Manto</span></button>
+        <button class="swatch" data-color="#e8e6e1" style="--c:#e8e6e1" aria-label="Bianco Perla"><span>Bianco Perla</span></button>
+      </div>
+    </section>
+
+    <section class="cta" id="preordina">
+      <p class="eyebrow">Disponibilità</p>
+      <h2>Da <span class="grad">1.499 €</span></h2>
+      <p>Prenota ora il tuo Xiaomi 18 Fold e ricevi la ricarica wireless in omaggio.</p>
+      <a class="btn-primary" href="#top">Preordina ora</a>
+      <footer>
+        <p>Concept non ufficiale realizzato a scopo dimostrativo. Xiaomi e Leica sono marchi dei rispettivi proprietari.</p>
+      </footer>
+    </section>
+  </main>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
