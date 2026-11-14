@@ -25,14 +25,14 @@ const WALLPAPERS = [
 ];
 
 const APPS = [
-  { id: 'calcolatrice', name: 'Calcolatrice', icon: '🧮', dock: false },
-  { id: 'impostazioni', name: 'Impostazioni', icon: '⚙️', dock: false },
-  { id: 'meteo', name: 'Meteo', icon: '⛅', dock: false },
-  { id: 'galleria', name: 'Galleria', icon: '🖼️', dock: true },
-  { id: 'musica', name: 'Musica', icon: '🎵', dock: true },
-  { id: 'snake', name: 'Snake', icon: '🐍', dock: false },
-  { id: 'g2048', name: '2048', icon: '🔢', dock: false },
-  { id: 'piega', name: 'Piega', icon: '📱', dock: true, action: 'fold' },
+  { id: 'calcolatrice', name: 'Calcolatrice', icon: '🧮', dock: false, color: 'linear-gradient(135deg, #ffb340, #ff7a00)' },
+  { id: 'impostazioni', name: 'Impostazioni', icon: '⚙️', dock: false, color: 'linear-gradient(135deg, #c7cedb, #7a8496)' },
+  { id: 'meteo', name: 'Meteo', icon: '⛅', dock: false, color: 'linear-gradient(135deg, #62b8ff, #1d6ef2)' },
+  { id: 'galleria', name: 'Galleria', icon: '🌸', dock: true, color: 'linear-gradient(135deg, #ff7eb3, #ff2d78)' },
+  { id: 'musica', name: 'Musica', icon: '🎵', dock: true, color: 'linear-gradient(135deg, #ff6f5e, #ff2d55)' },
+  { id: 'snake', name: 'Snake', icon: '🐍', dock: false, color: 'linear-gradient(135deg, #3ddc84, #0ea05a)' },
+  { id: 'g2048', name: '2048', icon: '🔢', dock: false, color: 'linear-gradient(135deg, #ffd75e, #ff9d00)' },
+  { id: 'piega', name: 'Piega', icon: '📱', dock: true, action: 'fold', color: 'linear-gradient(135deg, #9d7bff, #5b3dff)' },
 ];
 
 const keyRouter = { handler: null };
@@ -60,7 +60,7 @@ function updateClock() {
   const long = days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()];
   const short = days[now.getDay()].slice(0, 3) + ' ' + now.getDate() + ' ' + months[now.getMonth()].slice(0, 3);
   document.getElementById('lockDate').textContent = long;
-  document.getElementById('cwDate').textContent = short + ' · Milano 18°';
+  document.getElementById('cwDate').textContent = short;
   document.getElementById('coverDate').textContent = short;
 }
 updateClock();
@@ -161,6 +161,7 @@ function appButton(app) {
   const btn = document.createElement('button');
   btn.className = 'app-icon';
   btn.innerHTML = '<span class="ico">' + app.icon + '</span><span>' + app.name + '</span>';
+  btn.querySelector('.ico').style.background = app.color;
   btn.addEventListener('click', () => {
     if (app.action === 'fold') { toggleFold(); return; }
     openApp(app.id);
@@ -294,14 +295,52 @@ function initCalculator(root) {
   };
 }
 
-/* ---------- Settings ---------- */
+/* ---------- Settings (stile HyperOS) ---------- */
+
+function setCard() {
+  const card = document.createElement('div');
+  card.className = 'set-card';
+  return card;
+}
+
+function setRow(icon, color, label, right) {
+  const row = document.createElement('div');
+  row.className = 'set-row';
+  const ico = document.createElement('span');
+  ico.className = 'set-ico';
+  ico.style.background = color;
+  ico.textContent = icon;
+  const labelEl = document.createElement('span');
+  labelEl.className = 'set-name';
+  labelEl.textContent = label;
+  row.appendChild(ico);
+  row.appendChild(labelEl);
+  if (right) row.appendChild(right);
+  return row;
+}
+
+function setValue(text) {
+  const v = document.createElement('span');
+  v.className = 'set-value';
+  v.textContent = text;
+  return v;
+}
 
 function initSettings(root) {
   root.innerHTML = '';
 
-  const wpGroup = document.createElement('div');
-  wpGroup.className = 'set-group';
-  wpGroup.innerHTML = '<p class="set-label">Sfondo</p>';
+  const search = document.createElement('div');
+  search.className = 'set-search';
+  search.textContent = '🔍   Cerca impostazioni';
+  root.appendChild(search);
+
+  const net = setCard();
+  net.appendChild(setRow('📶', 'linear-gradient(135deg, #62b8ff, #1d6ef2)', 'Wi-Fi', setValue('Xiaomi_5G')));
+  net.appendChild(setRow('🔵', 'linear-gradient(135deg, #6ea8ff, #3a6bff)', 'Bluetooth', setValue('Attivo')));
+  net.appendChild(setRow('📡', 'linear-gradient(135deg, #3ddc84, #0ea05a)', 'Dati mobili', setValue('5G')));
+  root.appendChild(net);
+
+  const wpCard = setCard();
   const wpRow = document.createElement('div');
   wpRow.className = 'wp-row';
   const wpColors = ['#181038, #0b0b1c', '#061631, #040a18', '#07271e, #04120d', '#2b0e26, #12060f'];
@@ -317,52 +356,101 @@ function initSettings(root) {
     });
     wpRow.appendChild(sw);
   });
-  wpGroup.appendChild(wpRow);
-  root.appendChild(wpGroup);
+  const wpHead = setRow('🎨', 'linear-gradient(135deg, #ff7eb3, #ff2d78)', 'Sfondo');
+  wpHead.classList.add('no-border');
+  wpCard.appendChild(wpHead);
+  wpCard.appendChild(wpRow);
+  root.appendChild(wpCard);
 
-  const themeRow = document.createElement('div');
-  themeRow.className = 'set-row';
-  themeRow.innerHTML = '<span>Tema chiaro</span><span class="switch"><input type="checkbox" id="themeSwitch"><span class="track"></span></span>';
-  themeRow.querySelector('input').addEventListener('change', (e) => {
+  const sys = setCard();
+  const themeSwitch = document.createElement('span');
+  themeSwitch.className = 'switch';
+  themeSwitch.innerHTML = '<input type="checkbox" id="themeSwitch"><span class="track"></span>';
+  themeSwitch.querySelector('input').addEventListener('change', (e) => {
     document.body.classList.toggle('light-phone', e.target.checked);
   });
-  root.appendChild(themeRow);
+  sys.appendChild(setRow('🌗', 'linear-gradient(135deg, #6f7ba3, #3c4460)', 'Tema chiaro', themeSwitch));
+  const aod = document.createElement('span');
+  aod.className = 'switch';
+  aod.innerHTML = '<input type="checkbox" checked><span class="track"></span>';
+  sys.appendChild(setRow('🕐', 'linear-gradient(135deg, #9d7bff, #5b3dff)', 'Always-On Display', aod));
+  root.appendChild(sys);
 
-  const alwaysOn = document.createElement('div');
-  alwaysOn.className = 'set-row';
-  alwaysOn.innerHTML = '<span>Always-On Display</span><span class="switch"><input type="checkbox" checked><span class="track"></span></span>';
-  root.appendChild(alwaysOn);
-
-  const info = document.createElement('div');
-  info.className = 'set-group';
-  info.innerHTML =
-    '<p class="set-label">Info dispositivo</p>' +
+  const info = setCard();
+  info.appendChild(setRow('ℹ️', 'linear-gradient(135deg, #c7cedb, #7a8496)', 'Info dispositivo'));
+  const infoBody = document.createElement('div');
+  infoBody.className = 'set-info';
+  infoBody.innerHTML =
     '<div class="info-line"><span>Dispositivo</span><strong>Xiaomi 18 Fold</strong></div>' +
     '<div class="info-line"><span>Sistema</span><strong>HyperOS 4 (Android 16)</strong></div>' +
     '<div class="info-line"><span>Processore</span><strong>Snapdragon 8 Elite Gen 5</strong></div>' +
     '<div class="info-line"><span>RAM</span><strong>16 GB LPDDR5X</strong></div>' +
-    '<div class="info-line"><span>Memoria</span><strong>512 GB UFS 4.1</strong></div>' +
     '<div class="info-line"><span>Display</span><strong>8,03" AMOLED 2K 120Hz</strong></div>';
+  info.appendChild(infoBody);
   root.appendChild(info);
 }
 
-/* ---------- Weather ---------- */
+/* ---------- Weather (stile HyperOS) ---------- */
 
 function initWeather(root) {
-  root.innerHTML =
-    '<div class="weather-hero">' +
-    '<div class="w-ico">⛅</div>' +
-    '<div class="w-temp">18°</div>' +
-    '<div class="w-city">Milano · Parzialmente nuvoloso</div>' +
-    '</div>' +
-    '<div class="forecast">' +
-    [['Mer', '☀️', '21°'], ['Gio', '⛅', '19°'], ['Ven', '🌧️', '15°'], ['Sab', '☁️', '17°']].map((d) =>
-      '<div class="f-day">' + d[0] + '<div class="f-ico">' + d[1] + '</div><strong>' + d[2] + '</strong></div>'
-    ).join('') +
-    '</div>';
+  root.classList.add('no-pad');
+  root.innerHTML = '';
+
+  const wx = document.createElement('div');
+  wx.className = 'wx';
+
+  const hero = document.createElement('div');
+  hero.className = 'wx-hero';
+  hero.innerHTML =
+    '<p class="wx-city">Milano</p>' +
+    '<p class="wx-temp">18°</p>' +
+    '<p class="wx-cond">Parzialmente nuvoloso</p>' +
+    '<p class="wx-maxmin">Max: 21° · Min: 12°</p>';
+
+  const hourlyData = [['Ora', '⛅', '18°'], ['15:00', '⛅', '19°'], ['16:00', '☀️', '20°'], ['17:00', '☀️', '19°'], ['18:00', '🌇', '17°'], ['19:00', '🌆', '15°'], ['20:00', '🌙', '14°'], ['21:00', '🌙', '13°']];
+  const hourly = document.createElement('div');
+  hourly.className = 'wx-card wx-hourly';
+  hourly.innerHTML = hourlyData.map((h) =>
+    '<div class="wx-hour"><span>' + h[0] + '</span><span class="wx-h-ico">' + h[1] + '</span><strong>' + h[2] + '</strong></div>'
+  ).join('');
+
+  const days = [
+    ['Oggi', '⛅', 12, 21], ['Mercoledì', '☀️', 13, 23], ['Giovedì', '🌧️', 11, 16],
+    ['Venerdì', '🌧️', 10, 15], ['Sabato', '☁️', 12, 18], ['Domenica', '☀️', 14, 24],
+  ];
+  const daysEl = document.createElement('div');
+  daysEl.className = 'wx-card wx-days';
+  daysEl.innerHTML = days.map((d) => {
+    const left = ((d[2] - 8) / 18) * 100;
+    const width = ((d[3] - d[2]) / 18) * 100;
+    return (
+      '<div class="wx-day">' +
+      '<span class="wx-d-name">' + d[0] + '</span>' +
+      '<span class="wx-d-ico">' + d[1] + '</span>' +
+      '<span class="wx-d-min">' + d[2] + '°</span>' +
+      '<span class="wx-bar"><span style="left:' + left + '%;width:' + width + '%"></span></span>' +
+      '<span class="wx-d-max">' + d[3] + '°</span>' +
+      '</div>'
+    );
+  }).join('');
+
+  const details = document.createElement('div');
+  details.className = 'wx-card wx-details';
+  details.innerHTML = [
+    ['💨', 'Vento', '6 km/h ONO'], ['💧', 'Umidità', '62%'],
+    ['🌞', 'Indice UV', '3 · Moderato'], ['👁️', 'Visibilità', '10 km'],
+  ].map((d) =>
+    '<div class="wx-detail"><span class="wx-dt-ico">' + d[0] + '</span><span class="wx-dt-label">' + d[1] + '</span><strong>' + d[2] + '</strong></div>'
+  ).join('');
+
+  wx.appendChild(hero);
+  wx.appendChild(hourly);
+  wx.appendChild(daysEl);
+  wx.appendChild(details);
+  root.appendChild(wx);
 }
 
-/* ---------- Gallery ---------- */
+/* ---------- Gallery (stile HyperOS) ---------- */
 
 const GALLERY = [
   'linear-gradient(140deg, #ff6a00, #ff3d8a)',
@@ -371,10 +459,17 @@ const GALLERY = [
   'linear-gradient(140deg, #00e0a4, #00795c)',
   'linear-gradient(140deg, #ffd24a, #ff6a00)',
   'linear-gradient(140deg, #e8e6e1, #6b7080)',
+  'linear-gradient(140deg, #ff5f6d, #ffc371)',
+  'linear-gradient(140deg, #4776e6, #8e54e9)',
+  'linear-gradient(140deg, #11998e, #38ef7d)',
 ];
 
 function initGallery(root) {
   root.innerHTML = '';
+  const label = document.createElement('p');
+  label.className = 'gal-label';
+  label.textContent = 'Oggi · Milano';
+  root.appendChild(label);
   const grid = document.createElement('div');
   grid.className = 'gal-grid';
   GALLERY.forEach((g, i) => {

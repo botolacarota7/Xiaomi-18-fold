@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="prova.css?v=1" />
+  <link rel="stylesheet" href="prova.css?v=2" />
 </head>
 <body>
   <header class="nav">
@@ -69,8 +69,14 @@
 
                 <div class="view home" id="viewHome">
                   <div class="clock-widget">
-                    <p class="cw-time" id="cwTime">09:41</p>
-                    <p class="cw-date" id="cwDate">Mar 17 mar · Milano 18°</p>
+                    <div class="cw-main">
+                      <p class="cw-time" id="cwTime">09:41</p>
+                      <p class="cw-date" id="cwDate">Mar 17 mar</p>
+                    </div>
+                    <div class="cw-weather">
+                      <span class="cw-ico">⛅</span>
+                      <span><strong>18°</strong><br/>Milano</span>
+                    </div>
                   </div>
                   <div class="app-grid" id="appGrid"></div>
                   <div class="dock" id="dock"></div>
@@ -100,6 +106,6 @@
     </div>
   </main>
 
-  <script src="prova.js?v=1"></script>
+  <script src="prova.js?v=2"></script>
 </body>
 </html>
