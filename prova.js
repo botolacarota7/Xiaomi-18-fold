@@ -30,6 +30,7 @@ const APPS = [
   { id: 'meteo', name: 'Meteo', icon: '⛅', dock: false, color: 'linear-gradient(135deg, #62b8ff, #1d6ef2)' },
   { id: 'galleria', name: 'Galleria', icon: '🌸', dock: true, color: 'linear-gradient(135deg, #ff7eb3, #ff2d78)' },
   { id: 'musica', name: 'Musica', icon: '🎵', dock: true, color: 'linear-gradient(135deg, #ff6f5e, #ff2d55)' },
+  { id: 'spotify', name: 'Spotify', icon: '🎧', dock: true, color: 'linear-gradient(135deg, #3ddc6f, #128a3e)' },
   { id: 'snake', name: 'Snake', icon: '🐍', dock: false, color: 'linear-gradient(135deg, #3ddc84, #0ea05a)' },
   { id: 'g2048', name: '2048', icon: '🔢', dock: false, color: 'linear-gradient(135deg, #ffd75e, #ff9d00)' },
   { id: 'piega', name: 'Piega', icon: '📱', dock: true, action: 'fold', color: 'linear-gradient(135deg, #9d7bff, #5b3dff)' },
@@ -37,6 +38,103 @@ const APPS = [
 
 const keyRouter = { handler: null };
 const cleanupFns = [];
+
+/* ---------- Motore musicale globale ---------- */
+
+const PLAYER_SONGS = {
+  musica: [
+    { title: 'Pieghevole', artist: 'Leica Sound', cover: 'linear-gradient(140deg, #ff6a00, #ff3d8a)', glow: 'rgba(255,106,0,0.55)', dur: 214 },
+    { title: 'Waterdrop', artist: 'Hinge Collective', cover: 'linear-gradient(140deg, #00c6ff, #7c5cff)', glow: 'rgba(0,150,255,0.5)', dur: 187 },
+    { title: 'Titanio', artist: 'Folding Machine', cover: 'linear-gradient(140deg, #8b939e, #2b2f3a)', glow: 'rgba(140,150,165,0.45)', dur: 243 },
+    { title: 'Neon Fold', artist: 'Aurora Kwan', cover: 'linear-gradient(140deg, #ff5f6d, #ffc371)', glow: 'rgba(255,95,109,0.5)', dur: 198 },
+  ],
+  spotify: [
+    { title: 'Mezzanotte Digitale', artist: 'Club HyperOS', cover: 'linear-gradient(140deg, #3ddc6f, #0a6e33)', glow: 'rgba(61,220,111,0.45)', dur: 232 },
+    { title: 'Correnti', artist: 'Luna Ferrari', cover: 'linear-gradient(140deg, #4776e6, #8e54e9)', glow: 'rgba(142,84,233,0.45)', dur: 205 },
+    { title: 'Squircle', artist: 'The Rounded Corners', cover: 'linear-gradient(140deg, #11998e, #38ef7d)', glow: 'rgba(56,239,125,0.4)', dur: 176 },
+    { title: '120 Hz', artist: 'AMOLED Dreams', cover: 'linear-gradient(140deg, #ffd24a, #ff6a00)', glow: 'rgba(255,180,40,0.45)', dur: 221 },
+  ],
+};
+
+const player = {
+  source: 'musica',
+  index: 0,
+  pos: 0,
+  playing: false,
+  timer: null,
+  listeners: new Set(),
+};
+
+function playerSong() { return PLAYER_SONGS[player.source][player.index]; }
+function playerNotify() { player.listeners.forEach((fn) => fn()); }
+
+function playerStartTimer() {
+  if (!player.timer) player.timer = setInterval(playerTick, 1000);
+}
+
+function playerTick() {
+  player.pos += 1;
+  if (player.pos >= playerSong().dur) {
+    player.index = (player.index + 1) % PLAYER_SONGS[player.source].length;
+    player.pos = 0;
+  }
+  playerNotify();
+  updateIsland();
+}
+
+function playerPlay() {
+  player.playing = true;
+  playerStartTimer();
+  playerNotify();
+  updateIsland();
+}
+
+function playerPause() {
+  player.playing = false;
+  if (player.timer) { clearInterval(player.timer); player.timer = null; }
+  playerNotify();
+  updateIsland();
+}
+
+function playerTogglePlay() { player.playing ? playerPause() : playerPlay(); }
+
+function playerSelect(source, index) {
+  player.source = source;
+  player.index = index;
+  player.pos = 0;
+  playerPlay();
+}
+
+function playerSkip(step) {
+  const list = PLAYER_SONGS[player.source];
+  player.index = (player.index + step + list.length) % list.length;
+  player.pos = 0;
+  playerNotify();
+  updateIsland();
+}
+
+/* ---------- Hyper Island ---------- */
+
+const island = document.getElementById('hyperIsland');
+
+function updateIsland() {
+  const inPlayerApp = currentApp === 'musica' || currentApp === 'spotify';
+  const active = (player.playing || player.pos > 0) && !inPlayerApp && power !== 'off' && power !== 'booting';
+  island.classList.toggle('show', active);
+  island.classList.toggle('paused', !player.playing);
+  if (active) {
+    const s = playerSong();
+    document.getElementById('hiIco').textContent = player.source === 'spotify' ? '🎧' : '🎵';
+    document.getElementById('hiTitle').textContent = s.title + ' · ' + s.artist;
+    document.getElementById('hiPlay').textContent = player.playing ? '⏸' : '▶';
+  }
+}
+
+island.addEventListener('click', () => openApp(player.source));
+document.getElementById('hiPlay').addEventListener('click', (e) => {
+  e.stopPropagation();
+  playerTogglePlay();
+});
 
 function addCleanup(fn) { cleanupFns.push(fn); }
 function runCleanups() {
@@ -99,6 +197,7 @@ function powerAction() {
     return;
   } else {
     power = 'off';
+    playerPause();
     closeApp(true);
     showView('off');
     updateCover();
@@ -205,9 +304,11 @@ function openApp(id) {
   else if (id === 'meteo') initWeather(content);
   else if (id === 'galleria') initGallery(content);
   else if (id === 'musica') initMusic(content);
+  else if (id === 'spotify') initSpotify(content);
   else if (id === 'snake') initSnake(content);
   else if (id === 'g2048') init2048(content);
   showView('app');
+  updateIsland();
 }
 
 function closeApp(silent) {
@@ -215,6 +316,7 @@ function closeApp(silent) {
   currentApp = null;
   appFrame.innerHTML = '';
   if (!silent) showView('home');
+  updateIsland();
 }
 
 /* ---------- Calculator ---------- */
@@ -490,69 +592,27 @@ function initGallery(root) {
   root.appendChild(grid);
 }
 
-/* ---------- Music ---------- */
+/* ---------- Music (stile Xiaomi) ---------- */
 
-const SONGS = [
-  { title: 'Pieghevole', artist: 'Leica Sound', cover: 'linear-gradient(140deg, #ff6a00, #7c5cff)', dur: 214 },
-  { title: 'Waterdrop', artist: 'Hinge Collective', cover: 'linear-gradient(140deg, #00c6ff, #7c5cff)', dur: 187 },
-  { title: 'Titanio', artist: 'Folding Machine', cover: 'linear-gradient(140deg, #8b939e, #2b2f3a)', dur: 243 },
-];
+function fmtTime(s) { return Math.floor(s / 60) + ':' + pad(Math.floor(s % 60)); }
 
 function initMusic(root) {
   root.innerHTML = '';
-  let song = 0;
-  let playing = false;
-  let pos = 0;
-  let timer = null;
+  root.classList.add('music-root');
 
-  const cover = document.createElement('div');
-  cover.className = 'music-cover';
-  const meta = document.createElement('div');
-  meta.className = 'music-meta';
-  const progress = document.createElement('div');
-  progress.className = 'progress';
-  progress.innerHTML = '<span></span>';
-  const times = document.createElement('div');
-  times.className = 'progress-times';
+  const backdrop = document.createElement('div');
+  backdrop.className = 'music-backdrop';
+
+  const now = document.createElement('div');
+  now.className = 'music-now';
+  now.innerHTML =
+    '<div class="music-cover"></div>' +
+    '<div class="music-meta"><div class="m-title"></div><div class="m-artist"></div></div>' +
+    '<div class="progress"><span></span></div>' +
+    '<div class="progress-times"><span></span><span></span></div>';
+
   const controls = document.createElement('div');
   controls.className = 'music-controls';
-
-  function fmt(s) { return Math.floor(s / 60) + ':' + pad(Math.floor(s % 60)); }
-
-  function renderMeta() {
-    const s = SONGS[song];
-    cover.style.background = s.cover;
-    meta.innerHTML = '<div class="m-title">' + s.title + '</div><div class="m-artist">' + s.artist + '</div>';
-  }
-
-  function renderProgress() {
-    const s = SONGS[song];
-    progress.querySelector('span').style.width = (pos / s.dur) * 100 + '%';
-    times.innerHTML = '<span>' + fmt(pos) + '</span><span>' + fmt(s.dur) + '</span>';
-  }
-
-  function stopTimer() { if (timer) { clearInterval(timer); timer = null; } }
-
-  function tick() {
-    pos += 1;
-    if (pos >= SONGS[song].dur) { pos = 0; song = (song + 1) % SONGS.length; renderMeta(); }
-    renderProgress();
-  }
-
-  function play() {
-    playing = true;
-    playBtn.textContent = '⏸';
-    stopTimer();
-    timer = setInterval(tick, 1000);
-    addCleanup(stopTimer);
-  }
-
-  function pause() {
-    playing = false;
-    playBtn.textContent = '▶';
-    stopTimer();
-  }
-
   const prevBtn = document.createElement('button');
   prevBtn.className = 'm-btn';
   prevBtn.textContent = '⏮';
@@ -562,22 +622,122 @@ function initMusic(root) {
   const nextBtn = document.createElement('button');
   nextBtn.className = 'm-btn';
   nextBtn.textContent = '⏭';
-
-  prevBtn.addEventListener('click', () => { song = (song - 1 + SONGS.length) % SONGS.length; pos = 0; renderMeta(); renderProgress(); if (playing) play(); });
-  nextBtn.addEventListener('click', () => { song = (song + 1) % SONGS.length; pos = 0; renderMeta(); renderProgress(); if (playing) play(); });
-  playBtn.addEventListener('click', () => (playing ? pause() : play()));
-
+  prevBtn.addEventListener('click', () => playerSkip(-1));
+  nextBtn.addEventListener('click', () => playerSkip(1));
+  playBtn.addEventListener('click', playerTogglePlay);
   controls.appendChild(prevBtn);
   controls.appendChild(playBtn);
   controls.appendChild(nextBtn);
-  root.appendChild(cover);
-  root.appendChild(meta);
-  root.appendChild(progress);
-  root.appendChild(times);
+
+  const queueLabel = document.createElement('p');
+  queueLabel.className = 'queue-label';
+  queueLabel.textContent = 'Prossimi brani';
+  const queue = document.createElement('div');
+  queue.className = 'music-queue';
+
+  PLAYER_SONGS.musica.forEach((s, i) => {
+    const row = document.createElement('button');
+    row.className = 'queue-row';
+    row.innerHTML =
+      '<span class="q-cover" style="background:' + s.cover + '"></span>' +
+      '<span class="q-meta"><strong>' + s.title + '</strong><em>' + s.artist + '</em></span>' +
+      '<span class="q-eq"><i></i><i></i><i></i></span>' +
+      '<span class="q-dur">' + fmtTime(s.dur) + '</span>';
+    row.addEventListener('click', () => playerSelect('musica', i));
+    queue.appendChild(row);
+  });
+
+  root.appendChild(backdrop);
+  root.appendChild(now);
   root.appendChild(controls);
-  renderMeta();
-  renderProgress();
-  addCleanup(stopTimer);
+  root.appendChild(queueLabel);
+  root.appendChild(queue);
+
+  function render() {
+    const s = playerSong();
+    const isMusica = player.source === 'musica';
+    now.querySelector('.music-cover').style.background = isMusica ? s.cover : 'linear-gradient(140deg, #3a3d4a, #16181f)';
+    backdrop.style.background =
+      'radial-gradient(90% 55% at 50% 0%, ' + (isMusica ? s.glow : 'rgba(120,120,140,0.25)') + ', transparent 70%)';
+    now.querySelector('.m-title').textContent = isMusica ? s.title : 'Riproduzione da Spotify';
+    now.querySelector('.m-artist').textContent = isMusica ? s.artist : s.title + ' · ' + s.artist;
+    now.querySelector('.progress span').style.width = (player.pos / s.dur) * 100 + '%';
+    now.querySelector('.progress-times').innerHTML =
+      '<span>' + fmtTime(player.pos) + '</span><span>' + fmtTime(s.dur) + '</span>';
+    playBtn.textContent = player.playing ? '⏸' : '▶';
+    queue.querySelectorAll('.queue-row').forEach((row, i) => {
+      row.classList.toggle('active', isMusica && i === player.index);
+      row.classList.toggle('playing', isMusica && i === player.index && player.playing);
+    });
+  }
+
+  const listener = () => render();
+  player.listeners.add(listener);
+  addCleanup(() => player.listeners.delete(listener));
+  render();
+}
+
+/* ---------- Spotify ---------- */
+
+function initSpotify(root) {
+  root.innerHTML = '';
+  root.classList.add('spo-root');
+
+  const hero = document.createElement('div');
+  hero.className = 'spo-hero';
+  hero.innerHTML =
+    '<p class="spo-kicker">PLAYLIST</p>' +
+    '<p class="spo-title">HyperOS Mix</p>' +
+    '<p class="spo-sub">Xiaomi 18 Fold · 4 brani</p>';
+
+  const list = document.createElement('div');
+  list.className = 'spo-list';
+
+  PLAYER_SONGS.spotify.forEach((s, i) => {
+    const row = document.createElement('button');
+    row.className = 'spo-row';
+    row.innerHTML =
+      '<span class="q-cover" style="background:' + s.cover + '"></span>' +
+      '<span class="q-meta"><strong>' + s.title + '</strong><em>' + s.artist + '</em></span>' +
+      '<span class="q-eq"><i></i><i></i><i></i></span>' +
+      '<span class="q-dur">' + fmtTime(s.dur) + '</span>';
+    row.addEventListener('click', () => playerSelect('spotify', i));
+    list.appendChild(row);
+  });
+
+  const nowBar = document.createElement('div');
+  nowBar.className = 'spo-now';
+  nowBar.innerHTML =
+    '<span class="q-cover spo-now-cover"></span>' +
+    '<span class="q-meta"><strong></strong><em></em></span>' +
+    '<button class="m-btn spo-now-play">▶</button>';
+  nowBar.querySelector('.spo-now-play').addEventListener('click', playerTogglePlay);
+  nowBar.addEventListener('click', (e) => {
+    if (!e.target.closest('.spo-now-play')) playerTogglePlay();
+  });
+
+  root.appendChild(hero);
+  root.appendChild(list);
+  root.appendChild(nowBar);
+
+  function render() {
+    const s = playerSong();
+    const isSpotify = player.source === 'spotify';
+    list.querySelectorAll('.spo-row').forEach((row, i) => {
+      row.classList.toggle('active', isSpotify && i === player.index);
+      row.classList.toggle('playing', isSpotify && i === player.index && player.playing);
+    });
+    nowBar.classList.toggle('visible', player.playing || player.pos > 0);
+    nowBar.querySelector('.spo-now-cover').style.background = isSpotify ? s.cover : 'linear-gradient(140deg, #3a3d4a, #16181f)';
+    nowBar.querySelector('strong').textContent = s.title;
+    nowBar.querySelector('em').textContent = s.artist;
+    nowBar.querySelector('.spo-now-play').textContent = player.playing ? '⏸' : '▶';
+  }
+
+  const listener = () => render();
+  player.listeners.add(listener);
+  addCleanup(() => player.listeners.delete(listener));
+  render();
 }
 
 /* ---------- Swipe helper ---------- */
