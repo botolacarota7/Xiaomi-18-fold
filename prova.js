@@ -33,6 +33,8 @@ const APPS = [
   { id: 'spotify', name: 'Spotify', icon: '🎧', dock: true, color: 'linear-gradient(135deg, #3ddc6f, #128a3e)' },
   { id: 'snake', name: 'Snake', icon: '🐍', dock: false, color: 'linear-gradient(135deg, #3ddc84, #0ea05a)' },
   { id: 'g2048', name: '2048', icon: '🔢', dock: false, color: 'linear-gradient(135deg, #ffd75e, #ff9d00)' },
+  { id: 'sparatutto', name: 'Sparatutto', icon: '🚀', dock: false, color: 'linear-gradient(135deg, #ff4d6d, #c9184a)' },
+  { id: 'cronometro', name: 'Cronometro', icon: '⏱️', dock: false, color: 'linear-gradient(135deg, #5e60ce, #3a0ca3)' },
   { id: 'piega', name: 'Piega', icon: '📱', dock: true, action: 'fold', color: 'linear-gradient(135deg, #9d7bff, #5b3dff)' },
 ];
 
@@ -113,27 +115,98 @@ function playerSkip(step) {
   updateIsland();
 }
 
+/* ---------- Cronometro (motore globale) ---------- */
+
+const stopwatch = { running: false, elapsed: 0, last: 0, laps: [], timer: null, listeners: new Set() };
+
+function swNotify() { stopwatch.listeners.forEach((fn) => fn()); }
+
+function swFormat(ms) {
+  const m = Math.floor(ms / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  const c = Math.floor((ms % 1000) / 10);
+  return pad(m) + ':' + pad(s) + '.' + pad(c);
+}
+
+function swTick() {
+  const now = performance.now();
+  stopwatch.elapsed += now - stopwatch.last;
+  stopwatch.last = now;
+  swNotify();
+  updateIsland();
+}
+
+function swStart() {
+  if (stopwatch.running) return;
+  stopwatch.running = true;
+  stopwatch.last = performance.now();
+  stopwatch.timer = setInterval(swTick, 33);
+  swNotify();
+  updateIsland();
+}
+
+function swPause() {
+  stopwatch.running = false;
+  if (stopwatch.timer) { clearInterval(stopwatch.timer); stopwatch.timer = null; }
+  swNotify();
+  updateIsland();
+}
+
+function swToggle() { stopwatch.running ? swPause() : swStart(); }
+
+function swReset() {
+  swPause();
+  stopwatch.elapsed = 0;
+  stopwatch.laps = [];
+  swNotify();
+  updateIsland();
+}
+
+function swLap() {
+  if (!stopwatch.running) return;
+  stopwatch.laps.push(stopwatch.elapsed);
+  swNotify();
+}
+
 /* ---------- Hyper Island ---------- */
 
 const island = document.getElementById('hyperIsland');
+let islandMode = 'music';
+
+function islandState() {
+  const inPlayerApp = currentApp === 'musica' || currentApp === 'spotify';
+  if ((player.playing || player.pos > 0) && !inPlayerApp) return 'music';
+  if ((stopwatch.running || stopwatch.elapsed > 0) && currentApp !== 'cronometro') return 'stopwatch';
+  return null;
+}
 
 function updateIsland() {
-  const inPlayerApp = currentApp === 'musica' || currentApp === 'spotify';
-  const active = (player.playing || player.pos > 0) && !inPlayerApp && power !== 'off' && power !== 'booting';
-  island.classList.toggle('show', active);
-  island.classList.toggle('paused', !player.playing);
-  if (active) {
+  const mode = islandState();
+  const active = mode && power !== 'off' && power !== 'booting';
+  islandMode = mode || islandMode;
+  island.classList.toggle('show', !!active);
+  if (!active) return;
+  if (mode === 'music') {
+    islandMode = 'music';
     const s = playerSong();
+    island.classList.toggle('paused', !player.playing);
     document.getElementById('hiIco').textContent = player.source === 'spotify' ? '🎧' : '🎵';
     document.getElementById('hiTitle').textContent = s.title + ' · ' + s.artist;
     document.getElementById('hiPlay').textContent = player.playing ? '⏸' : '▶';
+  } else {
+    islandMode = 'stopwatch';
+    island.classList.toggle('paused', !stopwatch.running);
+    document.getElementById('hiIco').textContent = '⏱️';
+    document.getElementById('hiTitle').textContent = 'Cronometro · ' + swFormat(stopwatch.elapsed);
+    document.getElementById('hiPlay').textContent = stopwatch.running ? '⏸' : '▶';
   }
 }
 
-island.addEventListener('click', () => openApp(player.source));
+island.addEventListener('click', () => openApp(islandMode === 'stopwatch' ? 'cronometro' : player.source));
 document.getElementById('hiPlay').addEventListener('click', (e) => {
   e.stopPropagation();
-  playerTogglePlay();
+  if (islandMode === 'stopwatch') swToggle();
+  else playerTogglePlay();
 });
 
 function addCleanup(fn) { cleanupFns.push(fn); }
@@ -307,6 +380,8 @@ function openApp(id) {
   else if (id === 'spotify') initSpotify(content);
   else if (id === 'snake') initSnake(content);
   else if (id === 'g2048') init2048(content);
+  else if (id === 'sparatutto') initShooter(content);
+  else if (id === 'cronometro') initStopwatch(content);
   showView('app');
   updateIsland();
 }
@@ -1014,6 +1089,269 @@ function init2048(root) {
   wrap.appendChild(hint);
   root.appendChild(wrap);
   reset();
+}
+
+/* ---------- Cronometro (stile Xiaomi) ---------- */
+
+function initStopwatch(root) {
+  root.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'sw';
+
+  const display = document.createElement('p');
+  display.className = 'sw-time';
+  display.textContent = '00:00.00';
+
+  const btns = document.createElement('div');
+  btns.className = 'sw-btns';
+  const lapBtn = document.createElement('button');
+  lapBtn.className = 'sw-btn sw-lap';
+  lapBtn.textContent = 'Giro';
+  lapBtn.addEventListener('click', () => (stopwatch.running ? swLap() : swReset()));
+  const mainBtn = document.createElement('button');
+  mainBtn.className = 'sw-btn sw-main';
+  mainBtn.textContent = 'Avvia';
+  mainBtn.addEventListener('click', swToggle);
+  btns.appendChild(lapBtn);
+  btns.appendChild(mainBtn);
+
+  const lapsEl = document.createElement('div');
+  lapsEl.className = 'sw-laps';
+
+  wrap.appendChild(display);
+  wrap.appendChild(btns);
+  wrap.appendChild(lapsEl);
+  root.appendChild(wrap);
+
+  function render() {
+    display.textContent = swFormat(stopwatch.elapsed);
+    mainBtn.textContent = stopwatch.running ? 'Pausa' : stopwatch.elapsed > 0 ? 'Riprendi' : 'Avvia';
+    mainBtn.classList.toggle('running', stopwatch.running);
+    lapBtn.textContent = stopwatch.running ? 'Giro' : stopwatch.elapsed > 0 ? 'Azzera' : 'Giro';
+
+    const n = stopwatch.laps.length;
+    let best = -1, worst = -1;
+    if (n >= 2) {
+      const splits = stopwatch.laps.map((t, i) => t - (stopwatch.laps[i - 1] || 0));
+      best = splits.indexOf(Math.min(...splits));
+      worst = splits.indexOf(Math.max(...splits));
+    }
+    lapsEl.innerHTML = stopwatch.laps
+      .map((t, i) => ({ t, split: t - (stopwatch.laps[i - 1] || 0), i }))
+      .reverse()
+      .map(({ t, split, i }) =>
+        '<div class="sw-lap' + (i === best ? ' best' : i === worst ? ' worst' : '') + '">' +
+        '<span>Giro ' + (i + 1) + '</span>' +
+        '<span class="sw-split">' + swFormat(split) + '</span>' +
+        '<span>' + swFormat(t) + '</span>' +
+        '</div>'
+      ).join('');
+  }
+
+  const listener = () => render();
+  stopwatch.listeners.add(listener);
+  addCleanup(() => stopwatch.listeners.delete(listener));
+
+  keyRouter.handler = (e) => {
+    if (e.code === 'Space') { e.preventDefault(); swToggle(); }
+    else if (e.key === 'l' || e.key === 'L') swLap();
+  };
+
+  render();
+}
+
+/* ---------- Sparatutto ---------- */
+
+function initShooter(root) {
+  root.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'game-wrap';
+
+  const hud = document.createElement('div');
+  hud.className = 'game-hud';
+  hud.innerHTML = 'Punti: <strong id="shScore">0</strong> · Vite: <strong id="shLives">❤❤❤</strong> · Livello <strong id="shWave">1</strong>';
+
+  const canvas = document.createElement('canvas');
+  canvas.className = 'game-canvas';
+  canvas.width = 300;
+  canvas.height = 340;
+  const ctx = canvas.getContext('2d');
+
+  const CW = canvas.width, CH = canvas.height;
+  let ship, bullets, enemies, score, lives, wave, over, loop, keys, shootCd;
+
+  function makeEnemies() {
+    const rows = Math.min(2 + Math.floor(wave / 2), 4);
+    const arr = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < 6; c++) {
+        arr.push({ x: 30 + c * 44, y: 26 + r * 34, r: 11, alive: true });
+      }
+    }
+    return arr;
+  }
+
+  function reset() {
+    const old = wrap.querySelector('.game-overlay');
+    if (old) old.remove();
+    ship = { x: CW / 2, w: 26 };
+    bullets = [];
+    score = 0;
+    lives = 3;
+    wave = 1;
+    over = false;
+    keys = {};
+    shootCd = 0;
+    enemies = makeEnemies();
+    updateHud();
+  }
+
+  function updateHud() {
+    hud.querySelector('#shScore').textContent = score;
+    hud.querySelector('#shLives').textContent = '❤'.repeat(Math.max(lives, 0));
+    hud.querySelector('#shWave').textContent = wave;
+  }
+
+  function shoot() {
+    if (over || shootCd > 0) return;
+    bullets.push({ x: ship.x, y: CH - 34 });
+    shootCd = 8;
+  }
+
+  function gameOver() {
+    over = true;
+    const ov = document.createElement('div');
+    ov.className = 'game-overlay';
+    ov.innerHTML = '<p class="big">Game Over</p><p style="color:var(--muted)">Punti: ' + score + '</p>';
+    const btn = document.createElement('button');
+    btn.textContent = 'Rigioca';
+    btn.addEventListener('click', () => { reset(); });
+    ov.appendChild(btn);
+    wrap.appendChild(ov);
+  }
+
+  function step() {
+    if (over) return;
+    shootCd = Math.max(0, shootCd - 1);
+
+    if (keys.ArrowLeft || keys.a) ship.x = Math.max(16, ship.x - 4.2);
+    if (keys.ArrowRight || keys.d) ship.x = Math.min(CW - 16, ship.x + 4.2);
+    if (keys.Space) shoot();
+
+    bullets.forEach((b) => { b.y -= 7; });
+    bullets = bullets.filter((b) => b.y > -8);
+
+    const speed = 0.35 + wave * 0.16;
+    let edge = false;
+    enemies.forEach((en) => {
+      if (!en.alive) return;
+      en.x += speed;
+      if (en.x > CW - 14 || en.x < 14) edge = true;
+    });
+    if (edge) {
+      enemies.forEach((en) => { en.x -= speed * 2; en.y += 16; });
+    }
+
+    enemies.forEach((en) => {
+      if (!en.alive) return;
+      bullets.forEach((b) => {
+        if (b.y < en.y + en.r && b.y > en.y - en.r && Math.abs(b.x - en.x) < en.r) {
+          en.alive = false;
+          b.y = -100;
+          score += 10;
+        }
+      });
+      if (en.y > CH - 40) {
+        en.alive = false;
+        lives -= 1;
+      }
+      if (en.y > CH - 52 && Math.abs(en.x - ship.x) < 20) {
+        en.alive = false;
+        lives -= 1;
+      }
+    });
+
+    if (enemies.every((en) => !en.alive)) {
+      wave += 1;
+      enemies = makeEnemies();
+    }
+    if (lives <= 0) {
+      updateHud();
+      gameOver();
+      return;
+    }
+    updateHud();
+    draw();
+  }
+
+  function draw() {
+    ctx.fillStyle = '#0d0f1a';
+    ctx.fillRect(0, 0, CW, CH);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    for (let i = 0; i < 20; i++) {
+      ctx.fillRect((i * 53 + 17) % CW, (i * 91 + 23) % CH, 1.6, 1.6);
+    }
+
+    ctx.fillStyle = '#ffd24a';
+    bullets.forEach((b) => ctx.fillRect(b.x - 1.5, b.y, 3, 9));
+
+    enemies.forEach((en) => {
+      if (!en.alive) return;
+      ctx.fillStyle = '#8e54e9';
+      ctx.beginPath();
+      ctx.roundRect(en.x - en.r, en.y - en.r, en.r * 2, en.r * 2, 5);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillRect(en.x - 4, en.y - 2, 3, 3);
+      ctx.fillRect(en.x + 2, en.y - 2, 3, 3);
+    });
+
+    ctx.fillStyle = '#ff6a00';
+    ctx.beginPath();
+    ctx.moveTo(ship.x, CH - 36);
+    ctx.lineTo(ship.x - 14, CH - 12);
+    ctx.lineTo(ship.x + 14, CH - 12);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#ffb84a';
+    ctx.fillRect(ship.x - 2, CH - 22, 4, 6);
+  }
+
+  keyRouter.handler = (e) => {
+    if (['ArrowLeft', 'ArrowRight', 'Space'].includes(e.code) || ['a', 'd'].includes(e.key)) {
+      e.preventDefault();
+      if (e.type === 'keydown') keys[e.code === 'Space' ? 'Space' : e.key] = true;
+    }
+  };
+  const keyUp = (e) => {
+    keys[e.code === 'Space' ? 'Space' : e.key] = false;
+  };
+  document.addEventListener('keyup', keyUp);
+  addCleanup(() => document.removeEventListener('keyup', keyUp));
+
+  canvas.addEventListener('pointermove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    ship.x = Math.max(16, Math.min(CW - 16, ((e.clientX - rect.left) / rect.width) * CW));
+  });
+  canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    shoot();
+  });
+
+  const hint = document.createElement('p');
+  hint.className = 'game-hint';
+  hint.textContent = 'Frecce/A-D per muoverti · Spazio o tap per sparare';
+
+  wrap.appendChild(hud);
+  wrap.appendChild(canvas);
+  wrap.appendChild(hint);
+  root.appendChild(wrap);
+
+  reset();
+  draw();
+  loop = setInterval(step, 28);
+  addCleanup(() => { clearInterval(loop); loop = null; });
 }
 
 /* ---------- Keyboard ---------- */
